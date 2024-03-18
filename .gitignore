@@ -1,0 +1,9 @@
+.idea/
+builds/
+certs/
+licenses/
+data/
+images/
+*.so
+*.db
+*.zip
