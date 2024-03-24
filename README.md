@@ -9,5 +9,6 @@ go build -o module-migration
 ### How to run
 
 ```bash
-./module-migration migrate
+./module-migration migrate-ros
+./module-migration migrate-wires
 ```

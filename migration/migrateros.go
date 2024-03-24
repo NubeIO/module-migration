@@ -9,18 +9,18 @@ import (
 	"time"
 )
 
-func BackupAndMigrate() {
+func BackupAndMigrateROS() {
 	source := "/data/rubix-os/data/data.db"
 	currentDateTime := time.Now().UTC().Format("20060102150405")
 	destinationDir := fmt.Sprintf("/data/backup/migration/rubix-os/%s", currentDateTime)
 	destination := filepath.Join(destinationDir, "data.db")
 	err := backup(source, destinationDir, destination)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf(err.Error())
 		return
 	}
 
-	migrate(source)
+	migrateROS(source)
 }
 
 func backup(source, destinationDir, destination string) error {
@@ -39,7 +39,7 @@ func backup(source, destinationDir, destination string) error {
 	return err
 }
 
-func migrate(source string) {
+func migrateROS(source string) {
 	db, err := sql.Open("sqlite3", source)
 	if err != nil {
 		panic(err)
@@ -51,7 +51,8 @@ func migrate(source string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if count > 1 {
+	if count > 0 {
+		log.Printf("loraraw exist")
 		err = db.QueryRow("SELECT COUNT(*) FROM plugins WHERE name = 'module-core-loraraw'").Scan(&count)
 		if err != nil {
 			log.Fatal(err)
@@ -59,6 +60,8 @@ func migrate(source string) {
 		if count != 1 {
 			log.Fatal("ERROR: install module-core-loraraw at first")
 		}
+	} else {
+		log.Printf("loraraw doesn't exist")
 	}
 
 	err = db.QueryRow("SELECT COUNT(*) FROM networks WHERE plugin_name = 'lorawan'").Scan(&count)
@@ -66,6 +69,7 @@ func migrate(source string) {
 		log.Fatal(err)
 	}
 	if count > 0 {
+		log.Printf("lorawan exist")
 		err = db.QueryRow("SELECT COUNT(*) FROM plugins WHERE name = 'module-core-lorawan'").Scan(&count)
 		if err != nil {
 			log.Fatal(err)
@@ -73,6 +77,8 @@ func migrate(source string) {
 		if count != 1 {
 			log.Fatal("ERROR: install module-core-lorawan at first")
 		}
+	} else {
+		log.Printf("lorawan doesn't exist")
 	}
 
 	err = db.QueryRow("SELECT COUNT(*) FROM networks WHERE plugin_name = 'bacnetmaster'").Scan(&count)
@@ -80,6 +86,7 @@ func migrate(source string) {
 		log.Fatal(err)
 	}
 	if count > 0 {
+		log.Printf("bacnetmaster exist")
 		err = db.QueryRow("SELECT COUNT(*) FROM plugins WHERE name = 'module-core-bacnetmaster'").Scan(&count)
 		if err != nil {
 			log.Fatal(err)
@@ -87,6 +94,8 @@ func migrate(source string) {
 		if count != 1 {
 			log.Fatal("ERROR: install module-core-bacnetmaster at first")
 		}
+	} else {
+		log.Printf("bacnetmaster doesn't exist")
 	}
 
 	err = db.QueryRow("SELECT COUNT(*) FROM networks WHERE plugin_name = 'modbus'").Scan(&count)
@@ -94,6 +103,7 @@ func migrate(source string) {
 		log.Fatal(err)
 	}
 	if count > 0 {
+		log.Printf("modbus exist")
 		err = db.QueryRow("SELECT COUNT(*) FROM plugins WHERE name = 'module-core-modbus';").Scan(&count)
 		if err != nil {
 			log.Fatal(err)
@@ -101,6 +111,8 @@ func migrate(source string) {
 		if count != 1 {
 			log.Fatal("ERROR: install module-core-modbus at first")
 		}
+	} else {
+		log.Printf("modbus doesn't exist")
 	}
 
 	result, err := db.Exec("UPDATE networks SET plugin_name = 'module-core-loraraw', plugin_uuid = (SELECT uuid FROM plugins WHERE name = 'module-core-loraraw') WHERE plugin_name = 'lora'")
