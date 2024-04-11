@@ -33,7 +33,7 @@ func BackupWires() {
 	log.Println("Migrated Body:")
 	fmt.Println(string(responseBody))
 	fmt.Print("\n")
-	_ = os.Mkdir(filepath.Dir(BackupWiresPath), 0644)
+	_ = os.MkdirAll(filepath.Dir(BackupWiresPath), 0644)
 	err = ioutil.WriteFile(BackupWiresPath, responseBody, 0644)
 	if err != nil {
 		log.Printf("Error saving response body to file: %s\n", err)
