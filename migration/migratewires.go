@@ -1,7 +1,11 @@
 package migration
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/NubeIO/flow-eng/nodes"
+	"github.com/NubeIO/module-migration/utils/wiresnew"
+	"github.com/NubeIO/module-migration/utils/wiresold"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -51,4 +55,28 @@ func replacePluginToModule(body []byte) []byte {
 	bodyString = strings.ReplaceAll(bodyString, `"point":"modbus`, `"point":"module-core-modbus`)
 
 	return []byte(bodyString)
+}
+
+func MigrateWires() {
+	nodeList, hostUUID, err := wiresold.Get()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	var encodedNodes nodes.NodesList
+	err = json.Unmarshal(nodeList, &encodedNodes)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	err = wiresnew.Migrate(&wiresnew.FlowDownload{
+		HostUUID:     hostUUID,
+		EncodedNodes: &encodedNodes,
+	})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 }
