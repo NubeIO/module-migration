@@ -13,7 +13,7 @@ var migrateWiresCmd = &cobra.Command{
 }
 
 func migrateWires(_ *cobra.Command, _ []string) {
-	migration.BackupWires()
+	migration.MigrateWires()
 }
 
 func init() {

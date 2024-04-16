@@ -6,9 +6,10 @@ import (
 	"github.com/NubeIO/module-migration/utils/wiresnew"
 	"github.com/NubeIO/module-migration/utils/wiresold"
 	"log"
+	"testing"
 )
 
-func MigrateWires() {
+func Test_MigrateWires(t *testing.T) {
 	nodeList, hostUUID, err := wiresold.Get()
 	if err != nil {
 		log.Fatal(err)
