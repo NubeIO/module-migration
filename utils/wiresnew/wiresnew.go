@@ -4,8 +4,10 @@ import (
 	flowctrl "github.com/NubeIO/flow-eng"
 	"github.com/NubeIO/flow-eng/node"
 	"github.com/NubeIO/flow-eng/nodes"
+	"github.com/NubeIO/lib-files/fileutils"
 	"github.com/NubeIO/rubix-edge-wires/db"
 	"github.com/mitchellh/mapstructure"
+	"strings"
 )
 
 var dbFile = "/data/rubix-edge-wires/data/data.json"
@@ -39,7 +41,17 @@ func Migrate(flowDownload *FlowDownload) error {
 		return err
 	}
 
-	return setLatestFlow(dec, true, flowDownload.HostUUID)
+	err = setLatestFlow(dec, true, flowDownload.HostUUID)
+	if err != nil {
+		return err
+	}
+
+	content, err := fileutils.ReadFile(dbFile)
+	if err != nil {
+		return err
+	}
+	newContent := replacePluginToModule(content)
+	return fileutils.WriteFile(dbFile, newContent, 0644)
 }
 
 func decode(encodedNodes *nodes.NodesList) ([]*node.Spec, error) {
@@ -58,4 +70,13 @@ func saveFlowDB(flow []*node.Spec, hostUUID string) *db.Backup {
 	bu := storage.AddBackup(back, 5)
 	storage.Save()
 	return bu
+}
+
+func replacePluginToModule(body string) string {
+	body = strings.ReplaceAll(body, `"point":"lora`, `"point":"module-core-loraraw`)
+	body = strings.ReplaceAll(body, `"point":"lorawan`, `"point":"module-core-lorawan`)
+	body = strings.ReplaceAll(body, `"point":"bacnetmaster`, `"point":"module-core-bacnetmaster`)
+	body = strings.ReplaceAll(body, `"point":"modbus`, `"point":"module-core-modbus`)
+
+	return body
 }

@@ -7,6 +7,8 @@ github.com/NubeDev/flow-eng v0.10.1 h1:6bQCIv0e8MOgWAErwZ3e27JY+nm0CFlh/zf+y3br/
 github.com/NubeDev/flow-eng v0.10.1/go.mod h1:Pdhx9plr6s9lgjIs4CWF0YGjiJ+ZS4M+p5kuOfA/7S8=
 github.com/NubeIO/flow-eng v0.1.0 h1:bminek0CFr0+u5MK/BJuh8trEvnWkwgWCw96N3Wv11M=
 github.com/NubeIO/flow-eng v0.1.0/go.mod h1:pZdGhS+vmtz8ldVqr1UlBOpctyuy0YUHCukdAwpeZHA=
+github.com/NubeIO/lib-files v1.0.0 h1:OZjBDXkXKGmI4SzciMnKa9Ko2mUCTbVrc3BCe1s6rwk=
+github.com/NubeIO/lib-files v1.0.0/go.mod h1:xi4mqMscDl6319i10LFowq5QvwChJLjqHCIJGkGa4RI=
 github.com/NubeIO/lib-mem-store-json v0.0.2 h1:QzEuA9DZt0sl1QzC7x2iLIit1qdT3VG2HbDeoottGsI=
 github.com/NubeIO/lib-mem-store-json v0.0.2/go.mod h1:bjYVh+aG8hSx0T7mCiUqhxXaHzB914ATuMmWjwkuS2A=
 github.com/NubeIO/lib-schema v0.2.18 h1:PmoZAdZFg22zZaXO29hYRL5a/IwZPXAEM9okY5x0A4M=

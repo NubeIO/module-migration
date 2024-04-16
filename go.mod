@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/NubeDev/flow-eng v0.10.1
 	github.com/NubeIO/flow-eng v0.1.0
+	github.com/NubeIO/lib-files v1.0.0
 	github.com/NubeIO/rubix-edge-wires v1.0.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/mitchellh/mapstructure v1.5.0
