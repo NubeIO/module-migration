@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-var dbFile = "/data/rubix-edge-wires/data/data.json"
-
 var (
 	storage  db.DB
 	flowInst *flowctrl.Flow
@@ -22,7 +20,7 @@ type FlowDownload struct {
 	EncodedNodes *nodes.NodesList `json:"encodedNodes"`
 }
 
-func Migrate(flowDownload *FlowDownload) error {
+func Migrate(dbFile string, flowDownload *FlowDownload) error {
 	if flowDownload == nil {
 		return nil
 	}

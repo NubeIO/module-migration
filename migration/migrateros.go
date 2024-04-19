@@ -1,157 +1,180 @@
 package migration
 
 import (
-	"database/sql"
+	"errors"
 	"fmt"
+	"github.com/NubeIO/module-migration/utils/sshclient"
+	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/ssh"
 	"log"
-	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
-func BackupAndMigrateROS() {
-	source := "/data/rubix-os/data/data.db"
+var rosDbFile = "/data/rubix-os/data/data.db"
+
+func BackupAndMigrateROS(ip, sshUsername, sshPassword string) error {
+	client, err := sshclient.New(ip, sshUsername, sshPassword)
+	if err != nil {
+		log.Printf(err.Error())
+		return err
+	}
+	defer client.Close()
+
 	currentDateTime := time.Now().UTC().Format("20060102150405")
 	destinationDir := fmt.Sprintf("/data/backup/migration/rubix-os/%s", currentDateTime)
 	destination := filepath.Join(destinationDir, "data.db")
-	err := backup(source, destinationDir, destination)
-	if err != nil {
+	if err = backupROS(client, destination, destinationDir); err != nil {
 		log.Printf(err.Error())
-		return
+		return err
 	}
 
-	migrateROS(source)
+	if err = migrateROS(client); err != nil {
+		log.Printf(err.Error())
+		return err
+	}
+
+	return restartROS(client)
 }
 
-func backup(source, destinationDir, destination string) error {
-	_ = os.MkdirAll(destinationDir, os.FileMode(755))
-	sourceFile, err := os.Open(source)
+func backupROS(client *ssh.Client, destination, destinationDir string) error {
+	session, err := client.NewSession()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	defer sourceFile.Close()
+	defer session.Close()
 
-	destFile, err := os.Create(destination)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer destFile.Close()
-	return err
+	cmd := fmt.Sprintf("mkdir -p %s && cp %s %s", destinationDir, rosDbFile, destination)
+	return session.Run(cmd)
 }
 
-func migrateROS(source string) {
-	db, err := sql.Open("sqlite3", source)
+func migrateROS(client *ssh.Client) error {
+	cmd := `'SELECT COUNT(*) FROM networks WHERE plugin_name = "lora"'`
+	out, err := runSqliteCommand(client, cmd)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	defer db.Close()
-
-	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM networks WHERE plugin_name = 'lora'").Scan(&count)
-	if err != nil {
-		log.Fatal(err)
-	}
+	count, _ := strconv.Atoi(string(out))
 	if count > 0 {
 		log.Printf("loraraw exist")
-		err = db.QueryRow("SELECT COUNT(*) FROM plugins WHERE name = 'module-core-loraraw'").Scan(&count)
+		cmd = `'SELECT COUNT(*) FROM plugins WHERE name = "module-core-loraraw"'`
+		out, err = runSqliteCommand(client, cmd)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
+		count, _ = strconv.Atoi(string(out))
 		if count != 1 {
-			log.Fatal("ERROR: install module-core-loraraw at first")
+			return errors.New("ERROR: install module-core-loraraw at first")
 		}
 	} else {
 		log.Printf("loraraw doesn't exist")
 	}
 
-	err = db.QueryRow("SELECT COUNT(*) FROM networks WHERE plugin_name = 'lorawan'").Scan(&count)
+	cmd = `'SELECT COUNT(*) FROM networks WHERE plugin_name = "lorawan"'`
+	out, err = runSqliteCommand(client, cmd)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	count, _ = strconv.Atoi(string(out))
 	if count > 0 {
 		log.Printf("lorawan exist")
-		err = db.QueryRow("SELECT COUNT(*) FROM plugins WHERE name = 'module-core-lorawan'").Scan(&count)
+		cmd = `'SELECT COUNT(*) FROM plugins WHERE name = "module-core-lorawan"'`
+		out, err = runSqliteCommand(client, cmd)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
+		count, _ = strconv.Atoi(string(out))
 		if count != 1 {
-			log.Fatal("ERROR: install module-core-lorawan at first")
+			return errors.New("ERROR: install module-core-lorawan at first")
 		}
 	} else {
 		log.Printf("lorawan doesn't exist")
 	}
 
-	err = db.QueryRow("SELECT COUNT(*) FROM networks WHERE plugin_name = 'bacnetmaster'").Scan(&count)
+	cmd = `'SELECT COUNT(*) FROM networks WHERE plugin_name = "bacnetmaster"'`
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	count, _ = strconv.Atoi(string(out))
 	if count > 0 {
 		log.Printf("bacnetmaster exist")
-		err = db.QueryRow("SELECT COUNT(*) FROM plugins WHERE name = 'module-core-bacnetmaster'").Scan(&count)
+		cmd = `'SELECT COUNT(*) FROM plugins WHERE name = "module-core-bacnetmaster"'`
+		out, err = runSqliteCommand(client, cmd)
 		if err != nil {
-			log.Fatal(err)
+			return err
+		}
+		count, _ = strconv.Atoi(string(out))
+		if err != nil {
+			return err
 		}
 		if count != 1 {
-			log.Fatal("ERROR: install module-core-bacnetmaster at first")
+			return errors.New("ERROR: install module-core-bacnetmaster at first")
 		}
 	} else {
 		log.Printf("bacnetmaster doesn't exist")
 	}
 
-	err = db.QueryRow("SELECT COUNT(*) FROM networks WHERE plugin_name = 'modbus'").Scan(&count)
+	cmd = `'SELECT COUNT(*) FROM networks WHERE plugin_name = "modbus"'`
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	count, _ = strconv.Atoi(string(out))
 	if count > 0 {
 		log.Printf("modbus exist")
-		err = db.QueryRow("SELECT COUNT(*) FROM plugins WHERE name = 'module-core-modbus';").Scan(&count)
+		cmd = `'SELECT COUNT(*) FROM plugins WHERE name = "module-core-modbus"'`
+		out, err = runSqliteCommand(client, cmd)
 		if err != nil {
-			log.Fatal(err)
+			return err
+		}
+		count, _ = strconv.Atoi(string(out))
+		if err != nil {
+			return err
 		}
 		if count != 1 {
-			log.Fatal("ERROR: install module-core-modbus at first")
+			return errors.New("ERROR: install module-core-modbus at first")
 		}
 	} else {
 		log.Printf("modbus doesn't exist")
 	}
 
-	result, err := db.Exec("UPDATE networks SET plugin_name = 'module-core-loraraw', plugin_uuid = (SELECT uuid FROM plugins WHERE name = 'module-core-loraraw') WHERE plugin_name = 'lora'")
+	cmd = `'UPDATE networks SET plugin_name = "module-core-loraraw", plugin_uuid = (SELECT uuid FROM plugins WHERE name = "module-core-loraraw") WHERE plugin_name = "lora";SELECT changes();'`
+	out, err = runSqliteCommand(client, cmd)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Rows affected for module-core-loraraw: %d\n", rowsAffected)
+	log.Printf("Rows affected for module-core-loraraw: %s\n", string(out))
 
-	result, err = db.Exec("UPDATE networks SET plugin_name = 'module-core-lorawan', plugin_uuid = (SELECT uuid FROM plugins WHERE name = 'module-core-lorawan') WHERE plugin_name = 'lorawan'")
+	cmd = `'UPDATE networks SET plugin_name = "module-core-lorawan", plugin_uuid = (SELECT uuid FROM plugins WHERE name = "module-core-lorawan") WHERE plugin_name = "lorawan";SELECT changes();'`
+	out, err = runSqliteCommand(client, cmd)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	rowsAffected, err = result.RowsAffected()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Rows affected for module-core-lorawan: %d\n", rowsAffected)
+	log.Printf("Rows affected for module-core-lorawan: %s\n", string(out))
 
-	result, err = db.Exec("UPDATE networks SET plugin_name = 'module-core-bacnetmaster', plugin_uuid = (SELECT uuid FROM plugins WHERE name = 'module-core-bacnetmaster') WHERE plugin_name = 'bacnetmaster'")
+	cmd = `'UPDATE networks SET plugin_name = "module-core-modbus", plugin_uuid = (SELECT uuid FROM plugins WHERE name = "module-core-modbus") WHERE plugin_name = "modbus";SELECT changes();'`
+	out, err = runSqliteCommand(client, cmd)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	rowsAffected, err = result.RowsAffected()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Rows affected for module-core-bacnetmaster: %d\n", rowsAffected)
+	log.Printf("Rows affected for module-core-modbus: %s\n", string(out))
+	return nil
+}
 
-	result, err = db.Exec("UPDATE networks SET plugin_name = 'module-core-modbus', plugin_uuid = (SELECT uuid FROM plugins WHERE name = 'module-core-modbus') WHERE plugin_name = 'modbus'")
+func runSqliteCommand(client *ssh.Client, cmd string) ([]byte, error) {
+	session, err := client.NewSession()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	rowsAffected, err = result.RowsAffected()
+	return session.CombinedOutput(fmt.Sprintf("sqlite3 %s %s", rosDbFile, cmd))
+}
+
+func restartROS(client *ssh.Client) error {
+	session, err := client.NewSession()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	log.Printf("Rows affected for module-core-modbus: %d\n", rowsAffected)
+	defer session.Close()
+
+	return session.Run("sudo systemctl restart nubeio-rubix-os.service")
 }

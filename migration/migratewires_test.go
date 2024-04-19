@@ -10,7 +10,7 @@ import (
 )
 
 func Test_MigrateWires(t *testing.T) {
-	nodeList, hostUUID, err := wiresold.Get()
+	nodeList, hostUUID, err := wiresold.Get("data.db")
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -23,10 +23,11 @@ func Test_MigrateWires(t *testing.T) {
 		return
 	}
 
-	err = wiresnew.Migrate(&wiresnew.FlowDownload{
-		HostUUID:     hostUUID,
-		EncodedNodes: &encodedNodes,
-	})
+	err = wiresnew.Migrate("data.json",
+		&wiresnew.FlowDownload{
+			HostUUID:     hostUUID,
+			EncodedNodes: &encodedNodes,
+		})
 	if err != nil {
 		log.Fatal(err)
 		return

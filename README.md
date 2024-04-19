@@ -14,26 +14,16 @@ go build -o module-migration
 2. wget https://github.com/NubeIO/module-migration/releases/download/v0.0.2/module-migration-0.0.3-3b1c3956.armv7.zip`
 3. unzip module-migration-0.0.3-3b1c3956.armv7.zip`
 
-### How to migrate ROS
+
+
+### How to
 
 #### Steps
 
-1. `rm -r /data/rubix-os/data/plugins/*`
-2. Upgrade ROS into latest
-3. Upgrade necessary all modules
-4. SSH in into the device
-5. Hit command: `sudo ./module-migration migrate-ros`
-6. Restart ROS (`systemctl restart nubeio-rubix-os.service` or restart from RCE)
+1. Generate host list.
+   1. Hit command: `sudo ./module-migration generate-csv`. Generates host list in `/data/migration/migration.csv`
+   2. Modify `/data/migration/migration.csv`.
 
-### How to migrate rubix-edge-wires
+2. Migrate 
+   1. Hit command: `sudo ./module-migration migrate`
 
-#### Prerequisite
-
-1. Wires needs to be running in the system
-
-#### Steps
-
-1. Hit command: `sudo ./module-migration migrate-wires`
-2. Upgrade rubix-edge-wires into latest
-3. Copy `/data/backup/migration/rubix-edge-wires/backup.json` file's content
-4. Paste the content in the Wires Sheet
