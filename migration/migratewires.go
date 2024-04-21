@@ -12,26 +12,30 @@ import (
 
 var wiresDbFile = "/data/rubix-edge-wires/data/data.db"
 var wiresJsonFile = "/data/rubix-edge-wires/data/data.json"
-var wiresDownloadDbFile = "/data/download/rubix-edge-wires/data/data.db"
-var wiresDownloadJsonFile = "/data/download/rubix-edge-wires/data/data.json"
+var wiresDownloadDbFile = "./data.db"
+var wiresDownloadJsonFile = "./data.json"
 
 func MigrateWires(ip, sshUsername, sshPassword string) error {
+	log.Printf("wires migration started")
 	if err := downloadWiresDb(ip, sshUsername, sshPassword); err != nil {
 		log.Printf(err.Error())
 		return err
 	}
+	log.Printf("wires downloaded")
 
 	nodeList, hostUUID, err := wiresold.Get(wiresDownloadDbFile)
 	if err != nil {
 		log.Printf(err.Error())
 		return err
 	}
+	log.Printf("read wires into old wires")
 
 	var encodedNodes nodes.NodesList
 	if err = json.Unmarshal(nodeList, &encodedNodes); err != nil {
 		log.Printf(err.Error())
 		return err
 	}
+	log.Printf("wires unmarshalled into nodes")
 
 	if err = wiresnew.Migrate(wiresDownloadJsonFile, &wiresnew.FlowDownload{
 		HostUUID:     hostUUID,
@@ -40,6 +44,7 @@ func MigrateWires(ip, sshUsername, sshPassword string) error {
 		log.Printf(err.Error())
 		return err
 	}
+	log.Printf("wires migrated into new wires")
 
 	if err = uploadWiresDb(ip, sshUsername, sshPassword); err != nil {
 		log.Printf(err.Error())

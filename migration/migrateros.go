@@ -143,21 +143,21 @@ func migrateROS(client *ssh.Client) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Rows affected for module-core-loraraw: %s\n", string(out))
+	log.Printf("Rows affected for module-core-loraraw: %s", string(out))
 
 	cmd = `'UPDATE networks SET plugin_name = "module-core-lorawan", plugin_uuid = (SELECT uuid FROM plugins WHERE name = "module-core-lorawan") WHERE plugin_name = "lorawan";SELECT changes();'`
 	out, err = runSqliteCommand(client, cmd)
 	if err != nil {
 		return err
 	}
-	log.Printf("Rows affected for module-core-lorawan: %s\n", string(out))
+	log.Printf("Rows affected for module-core-lorawan: %s", string(out))
 
 	cmd = `'UPDATE networks SET plugin_name = "module-core-modbus", plugin_uuid = (SELECT uuid FROM plugins WHERE name = "module-core-modbus") WHERE plugin_name = "modbus";SELECT changes();'`
 	out, err = runSqliteCommand(client, cmd)
 	if err != nil {
 		return err
 	}
-	log.Printf("Rows affected for module-core-modbus: %s\n", string(out))
+	log.Printf("Rows affected for module-core-modbus: %s", string(out))
 	return nil
 }
 

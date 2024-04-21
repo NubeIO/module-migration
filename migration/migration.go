@@ -12,34 +12,46 @@ func Migrate(sshUsername, sshPassword string) {
 		fmt.Printf(err.Error())
 		return
 	}
-	if len(hosts) == 0 {
+	if len(hosts) <= 1 {
 		fmt.Printf("Host not found.")
 	}
 
 	for _, hos := range hosts {
-		if !hos.PluginDeletion {
+		if hos.LocationUUID == "Location UUID" {
+			continue
+		}
+		if hos.PluginDeletionState != "true" {
 			log.Printf("Remove plugins started for host: %s", hos.HostName)
-			err = RemovePlugins(hos.VirtualIP, sshUsername, sshPassword)
+			err = RemovePlugins(hos.IP, sshUsername, sshPassword)
 			if err == nil {
-				hos.PluginDeletion = true
+				hos.PluginDeletionState = "true"
+				hos.PluginDeletionStatus = ""
+			} else {
+				hos.PluginDeletionStatus = err.Error()
 			}
 			log.Printf("Remove plugins finished for host: %s", hos.HostName)
 		}
 
-		if !hos.RosMigration {
+		if hos.RosMigrationState != "true" {
 			log.Printf("Ros migration started for host: %s", hos.HostName)
-			err = BackupAndMigrateROS(hos.VirtualIP, sshUsername, sshPassword)
+			err = BackupAndMigrateROS(hos.IP, sshUsername, sshPassword)
 			if err == nil {
-				hos.RosMigration = true
+				hos.RosMigrationState = "true"
+				hos.RosMigrationStatus = ""
+			} else {
+				hos.RosMigrationStatus = err.Error()
 			}
 			log.Printf("Ros migration finished for host: %s", hos.HostName)
 		}
 
-		if !hos.WiresMigration {
+		if hos.WiresMigrationState != "true" {
 			log.Printf("Wires migration started for host: %s", hos.HostName)
-			err = MigrateWires(hos.VirtualIP, sshUsername, sshPassword)
+			err = MigrateWires(hos.IP, sshUsername, sshPassword)
 			if err == nil {
-				hos.WiresMigration = true
+				hos.WiresMigrationState = "true"
+				hos.WiresMigrationStatus = ""
+			} else {
+				hos.WiresMigrationStatus = err.Error()
 			}
 			log.Printf("Wires migration finished for host: %s", hos.HostName)
 		}
