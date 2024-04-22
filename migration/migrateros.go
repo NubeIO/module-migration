@@ -158,6 +158,13 @@ func migrateROS(client *ssh.Client) error {
 		return err
 	}
 	log.Printf("Rows affected for module-core-modbus: %s", string(out))
+
+	cmd = `'UPDATE networks SET plugin_name = "module-core-bacnetmaster", plugin_uuid = (SELECT uuid FROM plugins WHERE name = "module-core-bacnetmaster") WHERE plugin_name = "bacnetmaster";SELECT changes();'`
+	out, err = runSqliteCommand(client, cmd)
+	if err != nil {
+		return err
+	}
+	log.Printf("Rows affected for module-core-bacnetmaster: %s", string(out))
 	return nil
 }
 
