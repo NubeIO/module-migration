@@ -19,5 +19,8 @@ func RemovePlugins(ip, sshUsername, sshPassword string) error {
 	}
 	defer session.Close()
 
-	return session.Run("rm -rf data/rubix-os/data/plugins/*")
+	if err = session.Run("rm -rf /data/rubix-os/data/plugins/*"); err != nil {
+		return err
+	}
+	return restartROS(client)
 }
