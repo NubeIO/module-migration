@@ -34,11 +34,14 @@ go build -o module-migration
     - Filter records on that CSV file for the migration
     - Make `ROS Migration State = true`
     - Make `Wires Migration State = true`
+    - Make `Plugin Deletion State = false`
     - Run Migration
 2. Upgrade ROS in bulk from RCE
 3. Install Modules in bulk from RCE
-4. Upgrade RubixEdgeWires in bulk from RCE
-5. Migrate older data into newer one
+4. Enable Modules in bulk from RCE
+5. Upgrade RubixEdgeWires in bulk from RCE
+6. Migrate older data into newer one
     - Make `ROS Migration State = false`
     - Make `Wires Migration State = false`
+    - Make `Plugin Deletion State = true`
     - Run Migration
