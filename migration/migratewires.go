@@ -7,6 +7,7 @@ import (
 	"github.com/NubeIO/module-migration/utils/wiresnew"
 	"github.com/NubeIO/module-migration/utils/wiresold"
 	"log"
+	"os"
 	"os/exec"
 )
 
@@ -18,37 +19,38 @@ var wiresDownloadJsonFile = "./data.json"
 func MigrateWires(ip, sshUsername, sshPassword string) error {
 	log.Printf("wires migration started")
 	if err := downloadWiresDb(ip, sshUsername, sshPassword); err != nil {
-		log.Printf(err.Error())
-		return err
+		return fmt.Errorf("failed to download wires: %s", err)
 	}
 	log.Printf("wires downloaded")
 
 	nodeList, hostUUID, err := wiresold.Get(wiresDownloadDbFile)
 	if err != nil {
-		log.Printf(err.Error())
-		return err
+		return fmt.Errorf("failed to read wires on old format: %s", err)
 	}
 	log.Printf("read wires into old wires")
 
 	var encodedNodes nodes.NodesList
 	if err = json.Unmarshal(nodeList, &encodedNodes); err != nil {
-		log.Printf(err.Error())
-		return err
+		return fmt.Errorf("failed to unmarshal wires: %s", err)
 	}
 	log.Printf("wires unmarshalled into nodes")
 
+	_ = os.Remove(wiresDownloadJsonFile) // remove it otherwise it gets appended
 	if err = wiresnew.Migrate(wiresDownloadJsonFile, &wiresnew.FlowDownload{
 		HostUUID:     hostUUID,
 		EncodedNodes: &encodedNodes,
 	}); err != nil {
-		log.Printf(err.Error())
-		return err
+		return fmt.Errorf("failed to migrate wires: %s", err)
 	}
 	log.Printf("wires migrated into new wires")
 
+	// Stop it first, otherwise it gets runtime values
+	if err = stopWires(ip, sshUsername, sshPassword); err != nil {
+		return fmt.Errorf("failed to stop wires: %s", err)
+	}
+
 	if err = uploadWiresDb(ip, sshUsername, sshPassword); err != nil {
-		log.Printf(err.Error())
-		return err
+		return fmt.Errorf("failed to upload wires: %s", err)
 	}
 
 	return restartWires(ip, sshUsername, sshPassword)
@@ -74,6 +76,15 @@ func uploadWiresDb(ip, sshUsername, sshPassword string) error {
 
 func restartWires(ip, sshUsername, sshPassword string) error {
 	cmd := fmt.Sprintf("sshpass -p '%s' ssh -o StrictHostKeyChecking=no %s@%s sudo systemctl restart nubeio-rubix-edge-wires.service",
+		sshPassword, sshUsername, ip)
+	if _, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func stopWires(ip, sshUsername, sshPassword string) error {
+	cmd := fmt.Sprintf("sshpass -p '%s' ssh -o StrictHostKeyChecking=no %s@%s sudo systemctl stop nubeio-rubix-edge-wires.service",
 		sshPassword, sshUsername, ip)
 	if _, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
 		return err
