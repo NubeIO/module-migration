@@ -18,6 +18,7 @@ require (
 require (
 	github.com/NubeIO/lib-mem-store-json v0.0.2 // indirect
 	github.com/NubeIO/lib-schema v0.2.18 // indirect
+	github.com/NubeIO/lib-systemctl-go v0.3.1 // indirect
 	github.com/NubeIO/lib-units v0.0.4 // indirect
 	github.com/NubeIO/module-core-rql v0.0.0-20230808031702-4f5f7b9389af // indirect
 	github.com/NubeIO/nubeio-rubix-lib-helpers-go v0.2.7 // indirect

@@ -1,6 +1,7 @@
 package host
 
 import (
+	"fmt"
 	"github.com/NubeIO/module-migration/cli"
 	"github.com/NubeIO/module-migration/utils/file"
 	"log"
@@ -14,6 +15,7 @@ type Host struct {
 	HostUUID             string `json:"host_uuid"`
 	HostName             string `json:"host_name"`
 	IP                   string `json:"ip"`
+	Port                 string `json:"port"`
 	RosMigrationState    string `json:"ros_migration_state"`
 	WiresMigrationState  string `json:"wires_migration_state"`
 	PluginDeletionState  string `json:"plugin_deletion_state"`
@@ -60,6 +62,7 @@ func UpdateHosts(hosts []*Host) error {
 			host.HostUUID,
 			host.HostName,
 			host.IP,
+			host.Port,
 			host.RosMigrationState,
 			host.WiresMigrationState,
 			host.PluginDeletionState,
@@ -85,6 +88,7 @@ func createHosts() error {
 		"Host UUID",
 		"Host Name",
 		"IP",
+		"Port",
 		"ROS Migration State",
 		"Wires Migration State",
 		"Plugin Deletion State",
@@ -103,6 +107,7 @@ func createHosts() error {
 					hos.UUID,
 					hos.Name,
 					hos.IP,
+					fmt.Sprintf("%d", hos.Port),
 					"false",
 					"false",
 					"false",
@@ -129,12 +134,13 @@ func mapToHosts(records [][]string) []*Host {
 				HostUUID:             record[4],
 				HostName:             record[5],
 				IP:                   record[6],
-				RosMigrationState:    record[7],
-				WiresMigrationState:  record[8],
-				PluginDeletionState:  record[9],
-				RosMigrationStatus:   record[10],
-				WiresMigrationStatus: record[11],
-				PluginDeletionStatus: record[12],
+				Port:                 record[7],
+				RosMigrationState:    record[8],
+				WiresMigrationState:  record[9],
+				PluginDeletionState:  record[10],
+				RosMigrationStatus:   record[11],
+				WiresMigrationStatus: record[12],
+				PluginDeletionStatus: record[13],
 			})
 	}
 	return hosts

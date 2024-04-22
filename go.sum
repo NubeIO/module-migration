@@ -13,6 +13,8 @@ github.com/NubeIO/lib-mem-store-json v0.0.2 h1:QzEuA9DZt0sl1QzC7x2iLIit1qdT3VG2H
 github.com/NubeIO/lib-mem-store-json v0.0.2/go.mod h1:bjYVh+aG8hSx0T7mCiUqhxXaHzB914ATuMmWjwkuS2A=
 github.com/NubeIO/lib-schema v0.2.18 h1:PmoZAdZFg22zZaXO29hYRL5a/IwZPXAEM9okY5x0A4M=
 github.com/NubeIO/lib-schema v0.2.18/go.mod h1:TGKDA6IIWHDwr5Aabawj6FF7NXUWXqu4ozWfph/hIjw=
+github.com/NubeIO/lib-systemctl-go v0.3.1 h1:IzmkzMX0kyxT9cjgLq0B7KZwrlPdiCLoSEJvGRngpA8=
+github.com/NubeIO/lib-systemctl-go v0.3.1/go.mod h1:P/Ij5pgTtjNnp/TQhsvwipk8sv+5cbZdtuvHiPAYXCE=
 github.com/NubeIO/lib-units v0.0.4 h1:Rt0ZQ73YS7NmI5o4fb1zWOy5Wdh+CiJydlKjccyF2m8=
 github.com/NubeIO/lib-units v0.0.4/go.mod h1:sbzVQrq5nOdwUvOqH395v7u3qcnqVNt+0yGBa2yZztM=
 github.com/NubeIO/module-core-rql v0.0.0-20230808031702-4f5f7b9389af h1:2VaFOVxRRnkGcwSb3LxQeuCzIFJlWrecoGIWtUNYtkI=

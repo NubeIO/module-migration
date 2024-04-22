@@ -2,8 +2,11 @@ package migration
 
 import (
 	"fmt"
+	"github.com/NubeIO/flow-eng/helpers/boolean"
+	"github.com/NubeIO/module-migration/cli"
 	"github.com/NubeIO/module-migration/utils/host"
 	"log"
+	"strconv"
 )
 
 func Migrate(sshUsername, sshPassword string) {
@@ -20,40 +23,60 @@ func Migrate(sshUsername, sshPassword string) {
 		if hos.LocationUUID == "Location UUID" {
 			continue
 		}
-		if hos.PluginDeletionState != "true" {
-			log.Printf("Remove plugins started for host: %s", hos.HostName)
-			err = RemovePlugins(hos.IP, sshUsername, sshPassword)
-			if err == nil {
-				hos.PluginDeletionState = "true"
-				hos.PluginDeletionStatus = ""
-			} else {
-				hos.PluginDeletionStatus = err.Error()
-			}
-			log.Printf("Remove plugins finished for host: %s", hos.HostName)
+		port, err := strconv.Atoi(hos.Port)
+		if err != nil {
+			log.Fatalf("port %s is not convertible to integer", hos.Port)
 		}
-
-		if hos.RosMigrationState != "true" {
-			log.Printf("Ros migration started for host: %s", hos.HostName)
-			err = BackupAndMigrateROS(hos.IP, sshUsername, sshPassword)
-			if err == nil {
-				hos.RosMigrationState = "true"
-				hos.RosMigrationStatus = ""
-			} else {
-				hos.RosMigrationStatus = err.Error()
+		cli.Setup(hos.IP, port, boolean.NewFalse(), "") // we don't need external token to check ping
+		_, pingable, _ := cli.CLIShort.Ping()
+		if pingable {
+			if hos.PluginDeletionState != "true" {
+				log.Printf("Remove plugins started for host: %s", hos.HostName)
+				err = RemovePlugins(hos.IP, sshUsername, sshPassword)
+				if err == nil {
+					hos.PluginDeletionState = "true"
+					hos.PluginDeletionStatus = ""
+				} else {
+					hos.PluginDeletionStatus = err.Error()
+				}
+				log.Printf("Remove plugins finished for host: %s", hos.HostName)
 			}
-			log.Printf("Ros migration finished for host: %s", hos.HostName)
-		}
 
-		if hos.WiresMigrationState != "true" {
-			log.Printf("Wires migration started for host: %s", hos.HostName)
-			err = MigrateWires(hos.IP, sshUsername, sshPassword)
-			if err == nil {
-				hos.WiresMigrationState = "true"
-				hos.WiresMigrationStatus = ""
-			} else {
-				hos.WiresMigrationStatus = err.Error()
+			if hos.RosMigrationState != "true" {
+				log.Printf("Ros migration started for host: %s", hos.HostName)
+				err = BackupAndMigrateROS(hos.IP, sshUsername, sshPassword)
+				if err == nil {
+					hos.RosMigrationState = "true"
+					hos.RosMigrationStatus = ""
+				} else {
+					hos.RosMigrationStatus = err.Error()
+				}
+				log.Printf("Ros migration finished for host: %s", hos.HostName)
 			}
-			log.Printf("Wires migration finished for host: %s", hos.HostName)
+
+			if hos.WiresMigrationState != "true" {
+				log.Printf("Wires migration started for host: %s", hos.HostName)
+				err = MigrateWires(hos.IP, sshUsername, sshPassword)
+				if err == nil {
+					hos.WiresMigrationState = "true"
+					hos.WiresMigrationStatus = ""
+				} else {
+					hos.WiresMigrationStatus = err.Error()
+				}
+				log.Printf("Wires migration finished for host: %s", hos.HostName)
+			}
+		} else {
+			if hos.PluginDeletionState != "true" {
+				hos.PluginDeletionStatus = "device is offline"
+			}
+
+			if hos.RosMigrationState != "true" {
+				hos.RosMigrationStatus = "device is offline"
+			}
+
+			if hos.WiresMigrationState != "true" {
+				hos.WiresMigrationStatus = "device is offline"
+			}
 		}
 	}
 
