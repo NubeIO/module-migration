@@ -28,7 +28,7 @@ func BackupAndMigrateROS(ip, sshUsername, sshPassword, sshPort string) error {
 	currentDateTime := time.Now().UTC().Format("20060102150405")
 	destinationDir := fmt.Sprintf("/data/backup/migration/rubix-os/%s", currentDateTime)
 	destination := filepath.Join(destinationDir, "data.db")
-	if err = backupROS(client, destination, destinationDir); err != nil {
+	if err = backup(client, destination, destinationDir); err != nil {
 		return fmt.Errorf("error on doing ROS backup: %s", err.Error())
 	}
 
@@ -53,28 +53,6 @@ func BackupAndMigrateROS(ip, sshUsername, sshPassword, sshPort string) error {
 	}
 	log.Printf("Finished upload")
 	return restartROS(client)
-}
-
-func backupROS(client *ssh.Client, destination, destinationDir string) error {
-	session, err := client.NewSession()
-	if err != nil {
-		return err
-	}
-	defer session.Close()
-
-	cmd := fmt.Sprintf("sudo mkdir -p %s && sudo cp %s %s", destinationDir, rosDbFile, destination)
-	return session.Run(cmd)
-}
-
-func giveFilePermission(client *ssh.Client, file string) error {
-	session, err := client.NewSession()
-	if err != nil {
-		return err
-	}
-	defer session.Close()
-
-	cmd := fmt.Sprintf("sudo chmod 777 %s", file)
-	return session.Run(cmd)
 }
 
 func migrateROSData() error {

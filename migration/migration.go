@@ -5,6 +5,7 @@ import (
 	"github.com/NubeIO/flow-eng/helpers/boolean"
 	"github.com/NubeIO/module-migration/cli"
 	"github.com/NubeIO/module-migration/utils/host"
+	"golang.org/x/crypto/ssh"
 	"log"
 	"strconv"
 )
@@ -56,7 +57,7 @@ func Migrate(sshUsername, sshPassword, sshPort string) {
 
 			if hos.WiresMigrationState != "true" {
 				log.Printf("Wires migration started for host: %s", hos.HostName)
-				err = MigrateWires(hos.IP, sshUsername, sshPassword)
+				err = MigrateWires(hos.IP, sshUsername, sshPassword, sshPort)
 				if err == nil {
 					hos.WiresMigrationState = "true"
 					hos.WiresMigrationStatus = ""
@@ -83,4 +84,26 @@ func Migrate(sshUsername, sshPassword, sshPort string) {
 	if err = host.UpdateHosts(hosts); err != nil {
 		fmt.Printf(err.Error())
 	}
+}
+
+func backup(client *ssh.Client, destination, destinationDir string) error {
+	session, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	cmd := fmt.Sprintf("sudo mkdir -p %s && sudo cp %s %s", destinationDir, rosDbFile, destination)
+	return session.Run(cmd)
+}
+
+func giveFilePermission(client *ssh.Client, file string) error {
+	session, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	cmd := fmt.Sprintf("sudo chmod 777 %s", file)
+	return session.Run(cmd)
 }
