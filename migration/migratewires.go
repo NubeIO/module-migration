@@ -13,7 +13,7 @@ import (
 
 var wiresDbFile = "/data/rubix-edge-wires/data/data.db"
 var wiresJsonFile = "/data/rubix-edge-wires/data/data.json"
-var wiresDownloadDbFile = "./data.db"
+var wiresDownloadDbFile = "./wires-data.db"
 var wiresDownloadJsonFile = "./data.json"
 
 func MigrateWires(ip, sshUsername, sshPassword string) error {
