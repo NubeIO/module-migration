@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func Migrate(sshUsername, sshPassword string) {
+func Migrate(sshUsername, sshPassword, sshPort string) {
 	hosts, err := host.GetHosts()
 	if err != nil {
 		fmt.Printf(err.Error())
@@ -32,7 +32,7 @@ func Migrate(sshUsername, sshPassword string) {
 		if pingable {
 			if hos.PluginDeletionState != "true" {
 				log.Printf("Remove plugins started for host: %s", hos.HostName)
-				err = RemovePlugins(hos.IP, sshUsername, sshPassword)
+				err = RemovePlugins(hos.IP, sshUsername, sshPassword, sshPort)
 				if err == nil {
 					hos.PluginDeletionState = "true"
 					hos.PluginDeletionStatus = ""
@@ -44,7 +44,7 @@ func Migrate(sshUsername, sshPassword string) {
 
 			if hos.RosMigrationState != "true" {
 				log.Printf("Ros migration started for host: %s", hos.HostName)
-				err = BackupAndMigrateROS(hos.IP, sshUsername, sshPassword)
+				err = BackupAndMigrateROS(hos.IP, sshUsername, sshPassword, sshPort)
 				if err == nil {
 					hos.RosMigrationState = "true"
 					hos.RosMigrationStatus = ""

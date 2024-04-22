@@ -25,7 +25,7 @@ go build -o module-migration
     2. Modify `./migration.csv`
 
 2. Migrate
-    1. Hit command: `sudo ./module-migration migrate --ssh-username <ssh-username> --ssh-password <ssh-password>`
+    1. Hit command: `sudo ./module-migration migrate --ssh-username <ssh-username> --ssh-password <ssh-password> --ssh-port <22 by default>`
 
 ### Workflow in migration
 

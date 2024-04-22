@@ -15,8 +15,8 @@ import (
 
 var rosDbFile = "/data/rubix-os/data/data.db"
 
-func BackupAndMigrateROS(ip, sshUsername, sshPassword string) error {
-	client, err := sshclient.New(ip, sshUsername, sshPassword)
+func BackupAndMigrateROS(ip, sshUsername, sshPassword, sshPort string) error {
+	client, err := sshclient.New(ip, sshUsername, sshPassword, sshPort)
 	if err != nil {
 		log.Printf(err.Error())
 		return err
@@ -50,7 +50,7 @@ func backupROS(client *ssh.Client, destination, destinationDir string) error {
 	}
 	defer session.Close()
 
-	cmd := fmt.Sprintf("mkdir -p %s && cp %s %s", destinationDir, rosDbFile, destination)
+	cmd := fmt.Sprintf("sudo mkdir -p %s && sudo cp %s %s", destinationDir, rosDbFile, destination)
 	return session.Run(cmd)
 }
 

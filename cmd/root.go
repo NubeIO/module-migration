@@ -12,6 +12,7 @@ var (
 	externalToken string
 	sshUsername   string
 	sshPassword   string
+	sshPort       string
 )
 
 var RootCmd = &cobra.Command{
@@ -35,4 +36,5 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&externalToken, "external-token", "", "", "external token")
 	RootCmd.PersistentFlags().StringVarP(&sshUsername, "ssh-username", "", "", "ssh username")
 	RootCmd.PersistentFlags().StringVarP(&sshPassword, "ssh-password", "", "", "ssh password")
+	RootCmd.PersistentFlags().StringVarP(&sshPort, "ssh-port", "", "22", "ssh port")
 }

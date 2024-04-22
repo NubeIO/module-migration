@@ -13,7 +13,7 @@ var migrateCmd = &cobra.Command{
 }
 
 func migrate(_ *cobra.Command, _ []string) {
-	migration.Migrate(sshUsername, sshPassword)
+	migration.Migrate(sshUsername, sshPassword, sshPort)
 }
 
 func init() {

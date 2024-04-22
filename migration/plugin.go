@@ -5,8 +5,8 @@ import (
 	"log"
 )
 
-func RemovePlugins(ip, sshUsername, sshPassword string) error {
-	client, err := sshclient.New(ip, sshUsername, sshPassword)
+func RemovePlugins(ip, sshUsername, sshPassword, port string) error {
+	client, err := sshclient.New(ip, sshUsername, sshPassword, port)
 	if err != nil {
 		log.Printf(err.Error())
 		return err
@@ -19,7 +19,7 @@ func RemovePlugins(ip, sshUsername, sshPassword string) error {
 	}
 	defer session.Close()
 
-	if err = session.Run("rm -rf /data/rubix-os/data/plugins/*"); err != nil {
+	if err = session.Run("sudo rm -rf /data/rubix-os/data/plugins/*"); err != nil {
 		return err
 	}
 	return restartROS(client)
