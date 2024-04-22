@@ -34,6 +34,7 @@ func GenerateHosts() {
 	}
 
 	if len(hosts) > 0 {
+		log.Printf("We already have migration.csv")
 		return
 	}
 

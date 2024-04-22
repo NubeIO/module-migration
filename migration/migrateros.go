@@ -27,13 +27,17 @@ func BackupAndMigrateROS(ip, sshUsername, sshPassword string) error {
 	destinationDir := fmt.Sprintf("/data/backup/migration/rubix-os/%s", currentDateTime)
 	destination := filepath.Join(destinationDir, "data.db")
 	if err = backupROS(client, destination, destinationDir); err != nil {
-		log.Printf(err.Error())
+		return fmt.Errorf("error on doing ROS backup: %s", err.Error())
+	}
+
+	// Need to stop it first otherwise, we might get database lock issue
+	if err = stopROS(client); err != nil {
 		return err
 	}
 
 	if err = migrateROS(client); err != nil {
-		log.Printf(err.Error())
-		return err
+		_ = restartROS(client)
+		return fmt.Errorf("error on doing ROS migration: %s", err.Error())
 	}
 
 	return restartROS(client)
@@ -187,4 +191,14 @@ func restartROS(client *ssh.Client) error {
 	defer session.Close()
 
 	return session.Run("sudo systemctl restart nubeio-rubix-os.service")
+}
+
+func stopROS(client *ssh.Client) error {
+	session, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	return session.Run("sudo systemctl stop nubeio-rubix-os.service")
 }
