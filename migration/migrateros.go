@@ -9,6 +9,7 @@ import (
 	"log"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -55,7 +56,7 @@ func migrateROS(client *ssh.Client) error {
 	if err != nil {
 		return err
 	}
-	count, _ := strconv.Atoi(string(out))
+	count, _ := strconv.Atoi(strings.TrimRight(string(out), "\n"))
 	if count > 0 {
 		log.Printf("loraraw exist")
 		cmd = `'SELECT COUNT(*) FROM plugins WHERE name = "module-core-loraraw"'`
@@ -63,7 +64,7 @@ func migrateROS(client *ssh.Client) error {
 		if err != nil {
 			return err
 		}
-		count, _ = strconv.Atoi(string(out))
+		count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
 		if count != 1 {
 			return errors.New("ERROR: install module-core-loraraw at first")
 		}
@@ -76,7 +77,7 @@ func migrateROS(client *ssh.Client) error {
 	if err != nil {
 		return err
 	}
-	count, _ = strconv.Atoi(string(out))
+	count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
 	if count > 0 {
 		log.Printf("lorawan exist")
 		cmd = `'SELECT COUNT(*) FROM plugins WHERE name = "module-core-lorawan"'`
@@ -84,7 +85,7 @@ func migrateROS(client *ssh.Client) error {
 		if err != nil {
 			return err
 		}
-		count, _ = strconv.Atoi(string(out))
+		count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
 		if count != 1 {
 			return errors.New("ERROR: install module-core-lorawan at first")
 		}
@@ -93,10 +94,11 @@ func migrateROS(client *ssh.Client) error {
 	}
 
 	cmd = `'SELECT COUNT(*) FROM networks WHERE plugin_name = "bacnetmaster"'`
+	out, err = runSqliteCommand(client, cmd)
 	if err != nil {
 		return err
 	}
-	count, _ = strconv.Atoi(string(out))
+	count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
 	if count > 0 {
 		log.Printf("bacnetmaster exist")
 		cmd = `'SELECT COUNT(*) FROM plugins WHERE name = "module-core-bacnetmaster"'`
@@ -104,7 +106,7 @@ func migrateROS(client *ssh.Client) error {
 		if err != nil {
 			return err
 		}
-		count, _ = strconv.Atoi(string(out))
+		count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
 		if err != nil {
 			return err
 		}
@@ -116,10 +118,11 @@ func migrateROS(client *ssh.Client) error {
 	}
 
 	cmd = `'SELECT COUNT(*) FROM networks WHERE plugin_name = "modbus"'`
+	out, err = runSqliteCommand(client, cmd)
 	if err != nil {
 		return err
 	}
-	count, _ = strconv.Atoi(string(out))
+	count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
 	if count > 0 {
 		log.Printf("modbus exist")
 		cmd = `'SELECT COUNT(*) FROM plugins WHERE name = "module-core-modbus"'`
@@ -127,7 +130,7 @@ func migrateROS(client *ssh.Client) error {
 		if err != nil {
 			return err
 		}
-		count, _ = strconv.Atoi(string(out))
+		count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
 		if err != nil {
 			return err
 		}
