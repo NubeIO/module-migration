@@ -4,12 +4,12 @@ on:
   pull_request:
     types: [ opened, synchronize, reopened, closed ]
     branches:
-      - main
       - master
+      - v2/master
   push:
     branches:
-      - main
       - master
+      - v2/master
     tags:
       - 'v*'
 
@@ -52,7 +52,7 @@ jobs:
         uses: zero88/gh-project-context@v1
         with:
           dry: false
-          defaultBranch: master
+          defaultBranch: v2/master
 
   build:
     runs-on: ubuntu-20.04
