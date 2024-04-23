@@ -73,10 +73,10 @@ func saveFlowDB(flow []*node.Spec, hostUUID string) *db.Backup {
 }
 
 func replacePluginToModule(body string) string {
-	body = strings.ReplaceAll(body, `"point":"lora`, `"point":"module-core-loraraw`)
-	body = strings.ReplaceAll(body, `"point":"lorawan`, `"point":"module-core-lorawan`)
-	body = strings.ReplaceAll(body, `"point":"bacnetmaster`, `"point":"module-core-bacnetmaster`)
-	body = strings.ReplaceAll(body, `"point":"modbus`, `"point":"module-core-modbus`)
+  body = strings.ReplaceAll(body, `"point":"lora:`, `"point":"module-core-loraraw:`)
+  body = strings.ReplaceAll(body, `"point":"lorawan:`, `"point":"module-core-lorawan:`)
+  body = strings.ReplaceAll(body, `"point":"bacnetmaster:`, `"point":"module-core-bacnetmaster:`)
+  body = strings.ReplaceAll(body, `"point":"modbus:`, `"point":"module-core-modbus:`)
 
 	return body
 }
