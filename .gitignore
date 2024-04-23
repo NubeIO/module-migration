@@ -8,3 +8,6 @@ images/
 *.db
 *.zip
 module-migration
+migration.csv
+data.json
+data.db

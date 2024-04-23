@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-var dbFile = "/data/rubix-edge-wires/data/data.json"
-
 var (
 	storage  db.DB
 	flowInst *flowctrl.Flow
@@ -22,7 +20,7 @@ type FlowDownload struct {
 	EncodedNodes *nodes.NodesList `json:"encodedNodes"`
 }
 
-func Migrate(flowDownload *FlowDownload) error {
+func Migrate(dbFile string, flowDownload *FlowDownload) error {
 	if flowDownload == nil {
 		return nil
 	}
@@ -73,10 +71,10 @@ func saveFlowDB(flow []*node.Spec, hostUUID string) *db.Backup {
 }
 
 func replacePluginToModule(body string) string {
-	body = strings.ReplaceAll(body, `"point":"lora`, `"point":"module-core-loraraw`)
-	body = strings.ReplaceAll(body, `"point":"lorawan`, `"point":"module-core-lorawan`)
-	body = strings.ReplaceAll(body, `"point":"bacnetmaster`, `"point":"module-core-bacnetmaster`)
-	body = strings.ReplaceAll(body, `"point":"modbus`, `"point":"module-core-modbus`)
+	body = strings.ReplaceAll(body, `"point":"lora:`, `"point":"module-core-loraraw:`)
+	body = strings.ReplaceAll(body, `"point":"lorawan:`, `"point":"module-core-lorawan:`)
+	body = strings.ReplaceAll(body, `"point":"bacnetmaster:`, `"point":"module-core-bacnetmaster:`)
+	body = strings.ReplaceAll(body, `"point":"modbus:`, `"point":"module-core-modbus:`)
 
 	return body
 }

@@ -1,157 +1,214 @@
 package migration
 
 import (
-	"database/sql"
+	"errors"
 	"fmt"
+	"github.com/NubeIO/module-migration/utils/sshclient"
+	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/ssh"
 	"log"
-	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 )
 
-func BackupAndMigrateROS() {
-	source := "/data/rubix-os/data/data.db"
+var rosDbFile = "/data/rubix-os/data/data.db"
+var rosDownloadDbFile = "./ros-data.db"
+
+func BackupAndMigrateROS(ip, sshUsername, sshPassword, sshPort string) error {
+	client, err := sshclient.New(ip, sshUsername, sshPassword, sshPort)
+	if err != nil {
+		log.Printf(err.Error())
+		return err
+	}
+	defer client.Close()
+
 	currentDateTime := time.Now().UTC().Format("20060102150405")
 	destinationDir := fmt.Sprintf("/data/backup/migration/rubix-os/%s", currentDateTime)
 	destination := filepath.Join(destinationDir, "data.db")
-	err := backup(source, destinationDir, destination)
-	if err != nil {
-		log.Printf(err.Error())
-		return
+	if err = backup(client, destination, destinationDir); err != nil {
+		return fmt.Errorf("error on doing ROS backup: %s", err.Error())
 	}
 
-	migrateROS(source)
+	_ = giveFilePermission(client, rosDbFile)
+
+	log.Printf("Started download")
+	if err := downloadRosDb(ip, sshUsername, sshPassword, sshPort); err != nil {
+		return fmt.Errorf("error on downloading ROS DB: %s", err.Error())
+	}
+	log.Printf("Finished download")
+
+	log.Printf("Started migrating ROS data")
+	if err = migrateROSData(); err != nil {
+		_ = restartROS(client)
+		return fmt.Errorf("error on doing ROS migration: %s", err.Error())
+	}
+	log.Printf("Finished migrating ROS data")
+
+	log.Printf("Started upload")
+	if err := uploadRosDb(ip, sshUsername, sshPassword, sshPort); err != nil {
+		return fmt.Errorf("error on uploading ROS DB: %s", err.Error())
+	}
+	log.Printf("Finished upload")
+	return restartROS(client)
 }
 
-func backup(source, destinationDir, destination string) error {
-	_ = os.MkdirAll(destinationDir, os.FileMode(755))
-	sourceFile, err := os.Open(source)
+func migrateROSData() error {
+	cmd := `'SELECT COUNT(*) FROM networks WHERE plugin_name = "lora"'`
+	out, err := runSqliteCommand(cmd)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	defer sourceFile.Close()
-
-	destFile, err := os.Create(destination)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer destFile.Close()
-	return err
-}
-
-func migrateROS(source string) {
-	db, err := sql.Open("sqlite3", source)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM networks WHERE plugin_name = 'lora'").Scan(&count)
-	if err != nil {
-		log.Fatal(err)
-	}
+	count, _ := strconv.Atoi(strings.TrimRight(string(out), "\n"))
 	if count > 0 {
 		log.Printf("loraraw exist")
-		err = db.QueryRow("SELECT COUNT(*) FROM plugins WHERE name = 'module-core-loraraw'").Scan(&count)
+		cmd = `'SELECT COUNT(*) FROM plugins WHERE name = "module-core-loraraw"'`
+		out, err = runSqliteCommand(cmd)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
+		count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
 		if count != 1 {
-			log.Fatal("ERROR: install module-core-loraraw at first")
+			return errors.New("ERROR: install module-core-loraraw at first")
 		}
 	} else {
 		log.Printf("loraraw doesn't exist")
 	}
 
-	err = db.QueryRow("SELECT COUNT(*) FROM networks WHERE plugin_name = 'lorawan'").Scan(&count)
+	cmd = `'SELECT COUNT(*) FROM networks WHERE plugin_name = "lorawan"'`
+	out, err = runSqliteCommand(cmd)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
 	if count > 0 {
 		log.Printf("lorawan exist")
-		err = db.QueryRow("SELECT COUNT(*) FROM plugins WHERE name = 'module-core-lorawan'").Scan(&count)
+		cmd = `'SELECT COUNT(*) FROM plugins WHERE name = "module-core-lorawan"'`
+		out, err = runSqliteCommand(cmd)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
+		count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
 		if count != 1 {
-			log.Fatal("ERROR: install module-core-lorawan at first")
+			return errors.New("ERROR: install module-core-lorawan at first")
 		}
 	} else {
 		log.Printf("lorawan doesn't exist")
 	}
 
-	err = db.QueryRow("SELECT COUNT(*) FROM networks WHERE plugin_name = 'bacnetmaster'").Scan(&count)
+	cmd = `'SELECT COUNT(*) FROM networks WHERE plugin_name = "bacnetmaster"'`
+	out, err = runSqliteCommand(cmd)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
 	if count > 0 {
 		log.Printf("bacnetmaster exist")
-		err = db.QueryRow("SELECT COUNT(*) FROM plugins WHERE name = 'module-core-bacnetmaster'").Scan(&count)
+		cmd = `'SELECT COUNT(*) FROM plugins WHERE name = "module-core-bacnetmaster"'`
+		out, err = runSqliteCommand(cmd)
 		if err != nil {
-			log.Fatal(err)
+			return err
+		}
+		count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
+		if err != nil {
+			return err
 		}
 		if count != 1 {
-			log.Fatal("ERROR: install module-core-bacnetmaster at first")
+			return errors.New("ERROR: install module-core-bacnetmaster at first")
 		}
 	} else {
 		log.Printf("bacnetmaster doesn't exist")
 	}
 
-	err = db.QueryRow("SELECT COUNT(*) FROM networks WHERE plugin_name = 'modbus'").Scan(&count)
+	cmd = `'SELECT COUNT(*) FROM networks WHERE plugin_name = "modbus"'`
+	out, err = runSqliteCommand(cmd)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
 	if count > 0 {
 		log.Printf("modbus exist")
-		err = db.QueryRow("SELECT COUNT(*) FROM plugins WHERE name = 'module-core-modbus';").Scan(&count)
+		cmd = `'SELECT COUNT(*) FROM plugins WHERE name = "module-core-modbus"'`
+		out, err = runSqliteCommand(cmd)
 		if err != nil {
-			log.Fatal(err)
+			return err
+		}
+		count, _ = strconv.Atoi(strings.TrimRight(string(out), "\n"))
+		if err != nil {
+			return err
 		}
 		if count != 1 {
-			log.Fatal("ERROR: install module-core-modbus at first")
+			return errors.New("ERROR: install module-core-modbus at first")
 		}
 	} else {
 		log.Printf("modbus doesn't exist")
 	}
 
-	result, err := db.Exec("UPDATE networks SET plugin_name = 'module-core-loraraw', plugin_uuid = (SELECT uuid FROM plugins WHERE name = 'module-core-loraraw') WHERE plugin_name = 'lora'")
+	cmd = `'UPDATE networks SET plugin_name = "module-core-loraraw", plugin_uuid = (SELECT uuid FROM plugins WHERE name = "module-core-loraraw") WHERE plugin_name = "lora";SELECT changes();'`
+	out, err = runSqliteCommand(cmd)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Rows affected for module-core-loraraw: %d\n", rowsAffected)
+	log.Printf("Rows affected for module-core-loraraw: %s", string(out))
 
-	result, err = db.Exec("UPDATE networks SET plugin_name = 'module-core-lorawan', plugin_uuid = (SELECT uuid FROM plugins WHERE name = 'module-core-lorawan') WHERE plugin_name = 'lorawan'")
+	cmd = `'UPDATE networks SET plugin_name = "module-core-lorawan", plugin_uuid = (SELECT uuid FROM plugins WHERE name = "module-core-lorawan") WHERE plugin_name = "lorawan";SELECT changes();'`
+	out, err = runSqliteCommand(cmd)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	rowsAffected, err = result.RowsAffected()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Rows affected for module-core-lorawan: %d\n", rowsAffected)
+	log.Printf("Rows affected for module-core-lorawan: %s", string(out))
 
-	result, err = db.Exec("UPDATE networks SET plugin_name = 'module-core-bacnetmaster', plugin_uuid = (SELECT uuid FROM plugins WHERE name = 'module-core-bacnetmaster') WHERE plugin_name = 'bacnetmaster'")
+	cmd = `'UPDATE networks SET plugin_name = "module-core-modbus", plugin_uuid = (SELECT uuid FROM plugins WHERE name = "module-core-modbus") WHERE plugin_name = "modbus";SELECT changes();'`
+	out, err = runSqliteCommand(cmd)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	rowsAffected, err = result.RowsAffected()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Rows affected for module-core-bacnetmaster: %d\n", rowsAffected)
+	log.Printf("Rows affected for module-core-modbus: %s", string(out))
 
-	result, err = db.Exec("UPDATE networks SET plugin_name = 'module-core-modbus', plugin_uuid = (SELECT uuid FROM plugins WHERE name = 'module-core-modbus') WHERE plugin_name = 'modbus'")
+	cmd = `'UPDATE networks SET plugin_name = "module-core-bacnetmaster", plugin_uuid = (SELECT uuid FROM plugins WHERE name = "module-core-bacnetmaster") WHERE plugin_name = "bacnetmaster";SELECT changes();'`
+	out, err = runSqliteCommand(cmd)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	rowsAffected, err = result.RowsAffected()
+	log.Printf("Rows affected for module-core-bacnetmaster: %s", string(out))
+	return nil
+}
+
+func downloadRosDb(ip, sshUsername, sshPassword, sshPort string) error {
+	cmd := fmt.Sprintf("sshpass -p '%s' scp -o StrictHostKeyChecking=no -P %s %s@%s:%s %s",
+		sshPassword, sshPort, sshUsername, ip, rosDbFile, rosDownloadDbFile)
+	if _, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func uploadRosDb(ip, sshUsername, sshPassword, sshPort string) error {
+	cmd := fmt.Sprintf("sshpass -p '%s' scp -o StrictHostKeyChecking=no -P %s %s %s@%s:%s",
+		sshPassword, sshPort, rosDownloadDbFile, sshUsername, ip, rosDbFile)
+	if _, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func runSqliteCommand(cmd string) ([]byte, error) {
+	command := exec.Command("sh", "-c", fmt.Sprintf("sqlite3 %s %s", rosDownloadDbFile, cmd))
+	output, err := command.CombinedOutput()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	log.Printf("Rows affected for module-core-modbus: %d\n", rowsAffected)
+	return output, nil
+}
+
+func restartROS(client *ssh.Client) error {
+	session, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	return session.Run("sudo systemctl restart nubeio-rubix-os.service")
 }

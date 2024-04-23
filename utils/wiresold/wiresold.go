@@ -17,7 +17,6 @@ import (
 )
 
 var (
-	dbFile       = "/data/rubix-edge-wires/data/data.db"
 	latestBackup *db.Backup
 	latestFlow   []*node.Spec
 	flowInst     *flowctrl.Flow
@@ -25,7 +24,7 @@ var (
 	cacheStore   *store.Store
 )
 
-func Get() (nodeList []byte, hostUUID string, err error) {
+func Get(dbFile string) (nodeList []byte, hostUUID string, err error) {
 	storage = db.New(dbFile)
 	if storage == nil {
 		return
