@@ -1,5 +1,7 @@
 # README
 
+It will perform a bulk migration according to the host records and status listed in the CSV.
+
 ## How to build
 
 ```bash
@@ -10,11 +12,10 @@ go build -o module-migration
 
 ### Pre-requisite
 
-1. Download `module-migration` binary file
-2. wget https://github.com/NubeIO/module-migration/releases/download/v0.0.2/module-migration-0.0.3-3b1c3956.armv7.zip`
-3. unzip module-migration-0.0.3-3b1c3956.armv7.zip`
-
-
+1. We need to have `sqlite3` in local
+2. Download `module-migration` binary file
+3. wget https://github.com/NubeIO/module-migration/releases/download/v0.0.2/module-migration-0.0.3-3b1c3956.armv7.zip`
+4. unzip module-migration-0.0.3-3b1c3956.armv7.zip`
 
 ### How to
 
