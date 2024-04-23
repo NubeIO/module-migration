@@ -11,8 +11,8 @@ go build -o module-migration
 ### Pre-requisite
 
 1. Download `module-migration` binary file
-2. wget https://github.com/NubeIO/module-migration/releases/download/v0.0.2/module-migration-0.0.2-870e56cd.armv7.zip`
-3. unzip module-migration-0.0.2-870e56cd.armv7.zip`
+2. wget https://github.com/NubeIO/module-migration/releases/download/v0.0.2/module-migration-0.0.3-3b1c3956.armv7.zip`
+3. unzip module-migration-0.0.3-3b1c3956.armv7.zip`
 
 ### How to migrate ROS
 
