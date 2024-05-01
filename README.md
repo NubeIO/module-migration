@@ -14,8 +14,8 @@ go build -o module-migration
 
 1. We need to have `sqlite3` in local
 2. Download `module-migration` binary file
-3. wget https://github.com/NubeIO/module-migration/releases/download/v0.0.2/module-migration-0.0.3-3b1c3956.armv7.zip`
-4. unzip module-migration-0.0.3-3b1c3956.armv7.zip`
+3. `wget https://github.com/NubeIO/module-migration/releases/download/v1.0.0/module-migration-1.0.0-728cca4e.amd64.zip`
+4. `unzip module-migration-1.0.0-728cca4e.amd64.zip`
 
 ### How to
 
