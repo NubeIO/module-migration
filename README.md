@@ -22,11 +22,11 @@ go build -o module-migration
 #### Steps
 
 1. Generate host list.
-    1. Hit command: `sudo ./module-migration generate-csv --external-token <external_token(need to escape $ by \$)> --ip <ip-or-ros-domain> --port <int> --schema <http|https>`
+    1. Hit command: `./module-migration generate-csv --external-token <external_token(need to escape $ by \$)> --ip <ip-or-ros-domain> --port <int> --schema <http|https>`
     2. Modify `./migration.csv`
 
 2. Migrate
-    1. Hit command: `sudo ./module-migration migrate --ssh-username <ssh-username> --ssh-password <ssh-password> --ssh-port <22 by default>`
+    1. Hit command: `./module-migration migrate --ssh-username <ssh-username> --ssh-password <ssh-password> --ssh-port <22 by default>`
 
 ### Workflow in migration
 
@@ -39,10 +39,10 @@ go build -o module-migration
     - Run Migration
 2. Upgrade ROS in bulk from RCE
 3. Install Modules in bulk from RCE
-4. Enable Modules in bulk from RCE
-5. Upgrade RubixEdgeWires in bulk from RCE
-6. Migrate older data into newer one
+4. Upgrade RubixEdgeWires in bulk from RCE
+5. Migrate older data into newer one
     - Make `ROS Migration State = false`
     - Make `Wires Migration State = false`
     - Make `Plugin Deletion State = true`
     - Run Migration
+6. Enable Modules in bulk from RCE
