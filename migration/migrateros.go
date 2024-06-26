@@ -24,7 +24,7 @@ func BackupAndMigrateROS(ip, sshUsername, sshPassword, sshPort string) error {
 		return err
 	}
 	defer client.Close()
-
+	_ = stopROS(client)
 	currentDateTime := time.Now().UTC().Format("20060102150405")
 	destinationDir := fmt.Sprintf("/data/backup/migration/rubix-os/%s", currentDateTime)
 	destination := filepath.Join(destinationDir, "data.db")
@@ -38,9 +38,8 @@ func BackupAndMigrateROS(ip, sshUsername, sshPassword, sshPort string) error {
 	if err := downloadRosDb(ip, sshUsername, sshPassword, sshPort); err != nil {
 		return fmt.Errorf("error on downloading ROS DB: %s", err.Error())
 	}
-	log.Printf("Finished download")
-
-	log.Printf("Started migrating ROS data")
+	command := exec.Command("sh", "-c", fmt.Sprintf("sudo chmod 777 ros-data.db"))
+	_, _ = command.CombinedOutput()
 	if err = migrateROSData(); err != nil {
 		_ = restartROS(client)
 		return fmt.Errorf("error on doing ROS migration: %s", err.Error())
@@ -211,4 +210,14 @@ func restartROS(client *ssh.Client) error {
 	defer session.Close()
 
 	return session.Run("sudo systemctl restart nubeio-rubix-os.service")
+}
+
+func stopROS(client *ssh.Client) error {
+	session, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	return session.Run("sudo systemctl stop nubeio-rubix-os.service")
 }
