@@ -6,6 +6,13 @@ It will perform a bulk migration according to the host records and status listed
 
 ```bash
 go build -o module-migration
+GITHUB_TOKEN=<GITHUB_TOKEN> bash build.bash
+```
+
+## How to build (for armv7)
+
+```bash
+GITHUB_TOKEN=<GITHUB_TOKEN> bash build.bash
 ```
 
 ## How to migrate
